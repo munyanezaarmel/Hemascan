@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       password,
       options: {
-        emailRedirectTo: 'http://localhost:3000/welcome',
+        emailRedirectTo: 'https://hemascananemia-d20zzptz7-munyanezaarmels-projects.vercel.app/auth/login',
         data: {
           full_name: fullName,
         },
