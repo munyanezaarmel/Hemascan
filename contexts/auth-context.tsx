@@ -66,11 +66,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signUp = async (email: string, password: string, fullName: string) => {
+      const redirectTo =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/auth/login`
+      : undefined
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: 'https://hemascananemia.vercel.app/auth/login',
+         emailRedirectTo: redirectTo,
         data: {
           full_name: fullName,
         },
@@ -80,10 +84,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signInWithGoogle = async () => {
+      const redirectTo =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/auth/callback`
+      : undefined
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo,
       },
     })
     return { error }
