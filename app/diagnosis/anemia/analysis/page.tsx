@@ -43,7 +43,7 @@ function AnalysisContent() {
     },
     {
       id: "roboflow",
-      name: "Roboflow AI Analysis",
+      name: " AI Analysis",
       description: "Running computer vision model for anemia detection",
       completed: false,
       progress: 0,

@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     `
 
     const { text } = await generateText({
-      model: groq("llama-3.1-70b-versatile"),
+      model: groq("llama3-70b-8192"),
       prompt,
       system:
         "You are a medical AI assistant providing evidence-based health recommendations. Always emphasize consulting healthcare professionals for medical decisions. Respond only with valid JSON.",

@@ -57,135 +57,6 @@ export function SimpleCamera({ onCapture, onError }: SimpleCameraProps) {
     }
   }, []);
 
-  const startCamera = useCallback(async () => {
-    setIsStarting(true);
-    setError(null);
-    setVideoReady(false);
-    addDebugInfo("🚀 Starting camera...");
-
-    try {
-      const hasSupport = await checkCameraSupport();
-      if (!hasSupport) {
-        throw new Error("No camera devices found");
-      }
-
-      if (stream) {
-        addDebugInfo("🔄 Stopping existing stream");
-        stream.getTracks().forEach((track) => track.stop());
-        setStream(null);
-      }
-
-      // Try different camera access strategies
-      let mediaStream: MediaStream | null = null;
-
-      try {
-        addDebugInfo("📹 Attempting camera access...");
-        mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: false,
-        });
-        addDebugInfo("✅ Camera access successful");
-      } catch (err: any) {
-        addDebugInfo(`❌ Initial camera access failed: ${err.message}`);
-
-        // Fallback to basic constraints
-        addDebugInfo("📹 Trying basic video constraints...");
-        mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: false,
-        });
-      }
-
-      setStream(mediaStream);
-      addDebugInfo("🎥 Stream obtained");
-
-      if (videoRef.current && mediaStream) {
-        const video = videoRef.current;
-        
-        // Clear any existing source
-        video.srcObject = null;
-        
-        // Set up event handlers before setting srcObject
-        const handleLoadedMetadata = () => {
-          addDebugInfo(
-            `📺 Video loaded - dimensions: ${video.videoWidth}x${video.videoHeight}`
-          );
-          addDebugInfo(`📺 Video readyState: ${video.readyState}`);
-          setVideoReady(true);
-        };
-
-        const handleCanPlay = () => {
-          addDebugInfo("🎬 Video can play");
-          video.play().catch((err) => {
-            addDebugInfo(`⚠️ Play failed: ${err.message}`);
-          });
-        };
-
-        const handlePlay = () => {
-          addDebugInfo("▶️ Video playing");
-        };
-
-        const handleError = (e: any) => {
-          addDebugInfo(`💥 Video error: ${e.message || 'Unknown error'}`);
-          console.error("Video error:", e);
-        };
-
-        // Add event listeners
-        video.addEventListener('loadedmetadata', handleLoadedMetadata);
-        video.addEventListener('canplay', handleCanPlay);
-        video.addEventListener('play', handlePlay);
-        video.addEventListener('error', handleError);
-
-        // Set video properties
-        video.muted = true;
-        video.playsInline = true;
-        video.autoplay = true;
-        
-        // Set the stream
-        video.srcObject = mediaStream;
-        
-        addDebugInfo("⌛ Video srcObject set, waiting for events...");
-
-        // Wait for video to be ready with timeout
-        await new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => {
-            addDebugInfo("⏰ Video load timeout");
-            reject(new Error("Video load timeout"));
-          }, 10000);
-
-          const checkReady = () => {
-            if (video.readyState >= 2) { // HAVE_CURRENT_DATA
-              clearTimeout(timeout);
-              addDebugInfo(`✅ Video ready (readyState: ${video.readyState})`);
-              resolve(void 0);
-            } else {
-              setTimeout(checkReady, 100);
-            }
-          };
-
-          checkReady();
-        });
-
-        // Force play if not already playing
-        if (video.paused) {
-          try {
-            await video.play();
-            addDebugInfo("▶️ Video playback forced");
-          } catch (err: any) {
-            addDebugInfo(`⚠️ Force play failed: ${err.message}`);
-          }
-        }
-      }
-    } catch (err: any) {
-      addDebugInfo(`💥 Camera error: ${err.message}`);
-      const errorMsg = `Camera access failed: ${err.message}`;
-      setError(errorMsg);
-      onError?.(errorMsg);
-    } finally {
-      setIsStarting(false);
-    }
-  }, [stream, onError, checkCameraSupport]);
-
   const stopCamera = useCallback(() => {
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
@@ -195,12 +66,125 @@ export function SimpleCamera({ onCapture, onError }: SimpleCameraProps) {
       videoRef.current.srcObject = null;
     }
     setError(null);
-    setVideoReady(false);
   }, [stream]);
+
+  // Update the startCamera function with better timeout and error handling
+  const startCamera = useCallback(async () => {
+    setIsStarting(true);
+    setError(null);
+    setVideoReady(false);
+    addDebugInfo("🚀 Starting camera...");
+
+    // Add a global timeout
+    const timeout = setTimeout(() => {
+      if (!videoReady) {
+        addDebugInfo("⚠️ Global camera start timeout");
+        stopCamera();
+        setError("Camera failed to start within 15 seconds. Please try again.");
+      }
+    }, 15000);
+
+    try {
+      // Stop any existing stream first
+      if (stream) {
+        addDebugInfo("🔄 Cleaning up existing stream");
+        stream.getTracks().forEach((track) => {
+          track.stop();
+          addDebugInfo(`Stopped track: ${track.kind}`);
+        });
+        setStream(null);
+      }
+
+      // Clear video element
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+        videoRef.current.load();
+      }
+
+      // Try to get camera stream with specific constraints
+      let mediaStream: MediaStream | null = null;
+      try {
+        addDebugInfo("📹 Requesting camera with specific constraints...");
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: "user",
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        });
+      } catch (err) {
+        addDebugInfo("⚠️ Falling back to basic constraints...");
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+      }
+
+      if (!mediaStream) {
+        throw new Error("Failed to get camera stream");
+      }
+
+      // Set up video element
+      if (videoRef.current) {
+        const video = videoRef.current;
+
+        // Remove any existing listeners
+        video.onloadedmetadata = null;
+        video.onloadeddata = null;
+        video.oncanplay = null;
+        video.onerror = null;
+
+        // Set up new listeners
+        video.onloadedmetadata = () => {
+          addDebugInfo(
+            `📺 Video dimensions: ${video.videoWidth}x${video.videoHeight}`
+          );
+        };
+
+        video.onloadeddata = () => {
+          addDebugInfo("🎬 Video data loaded");
+        };
+
+        video.oncanplay = () => {
+          addDebugInfo("✅ Video can play");
+          setVideoReady(true);
+          video
+            .play()
+            .catch((e) => addDebugInfo(`⚠️ Auto-play failed: ${e.message}`));
+        };
+
+        video.onerror = (e) => {
+          addDebugInfo(
+            `❌ Video error: ${video.error?.message || "Unknown error"}`
+          );
+          setError(`Video error: ${video.error?.message || "Unknown error"}`);
+        };
+
+        // Set video properties
+        video.muted = true;
+        video.playsInline = true;
+        video.autoplay = true;
+
+        // Assign stream
+        video.srcObject = mediaStream;
+        setStream(mediaStream);
+      }
+    } catch (err: any) {
+      addDebugInfo(`❌ Camera error: ${err.message}`);
+      setError(`Camera failed: ${err.message}`);
+      stopCamera();
+    } finally {
+      clearTimeout(timeout);
+      setIsStarting(false);
+    }
+  }, [stream, stopCamera]);
 
   const captureImage = useCallback(() => {
     if (!videoRef.current || !canvasRef.current || !stream) {
-      setError("Cannot capture - Camera not ready. Please start the camera first.");
+      setError(
+        "Cannot capture - Camera not ready. Please start the camera first."
+      );
       return;
     }
 
@@ -298,9 +282,14 @@ export function SimpleCamera({ onCapture, onError }: SimpleCameraProps) {
                   playsInline
                   muted
                   className="w-full h-full object-cover"
-                  style={{ 
-                    backgroundColor: '#000',
-                    transform: 'scaleX(-1)' // Mirror the video
+                  style={{
+                    backgroundColor: "#000",
+                    transform: "scaleX(-1)",
+                  }}
+                  onCanPlay={() => {
+                    videoRef.current?.play().catch((e) => {
+                      setError(`Play failed: ${e.message}`);
+                    });
                   }}
                 />
                 {videoReady && (

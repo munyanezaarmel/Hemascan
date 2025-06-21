@@ -16,6 +16,7 @@ export const metadata: Metadata = {
   title: "Hemascan",
   description:
     "Revolutionary non-invasive anemia detection with real-time eye analysis, voice guidance, and comprehensive health monitoring including heart rate and oxygen levels.",
+      manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -24,8 +25,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+    <html lang="en" suppressHydrationWarning={true}>
+      <body className={inter.className} suppressHydrationWarning={true} >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

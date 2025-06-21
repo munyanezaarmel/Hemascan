@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 
-const THINGSPEAK_CHANNEL_ID = process.env.THINGSPEAK_CHANNEL_ID || "2739166"
+const THINGSPEAK_CHANNEL_ID = process.env.THINGSPEAK_CHANNEL_ID || ""
 const THINGSPEAK_READ_API_KEY = process.env.THINGSPEAK_READ_API_KEY
 const THINGSPEAK_WRITE_API_KEY = process.env.THINGSPEAK_WRITE_API_KEY
 

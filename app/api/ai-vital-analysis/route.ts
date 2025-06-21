@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     console.log("Sending request to Groq AI...")
 
     const { text } = await generateText({
-      model: groq("llama-3.1-70b-versatile"),
+      model: groq("llama3-70b-8192"),
       prompt,
       system: `You are a medical AI assistant providing evidence-based health recommendations. 
                Always remind users to consult healthcare professionals for medical decisions.
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       suggestions: text,
       analysis_timestamp: new Date().toISOString(),
-      ai_model: "llama-3.1-70b-versatile",
+      ai_model: "llama3-70b-8192",
       vital_signs_analyzed: {
         heart_rate: heartRate,
         oxygen_level: oxygenLevel,
