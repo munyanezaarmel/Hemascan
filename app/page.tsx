@@ -63,7 +63,7 @@ export default function LandingPage() {
             <div className="bg-gradient-to-r from-red-600 to-pink-600 rounded-2xl p-1">
               <div className="bg-white rounded-xl p-8">
                 <Image
-                  src="/placeholder.svg?height=400&width=800"
+                  src="/hero.png"
                   alt="Hemascan AI Dashboard"
                   width={800}
                   height={400}
@@ -226,10 +226,10 @@ export default function LandingPage() {
             </div>
             <div className="relative">
               <Image
-                src="/placeholder.svg?height=500&width=600"
+                src="/image.jpg?height=500&width=600"
                 alt="Hemascan Technology"
-                width={600}
-                height={500}
+                width={400}
+                height={400}
                 className="rounded-2xl shadow-2xl"
               />
             </div>
