@@ -15,7 +15,7 @@ export default function LandingPage() {
             <div className="w-8 h-8 bg-gradient-to-r from-red-600 to-pink-600 rounded-lg flex items-center justify-center">
               <Activity className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+            <span className="text-lg font-bold gradient-text">
               Hemascan
             </span>
           </div>
@@ -36,7 +36,7 @@ export default function LandingPage() {
       <section className="py-20 px-4">
         <div className="container mx-auto text-center">
           <Badge className="mb-6 bg-red-100 text-red-700 hover:bg-red-100">🩸 Advanced Blood Analysis AI</Badge>
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-red-600 via-pink-600 to-rose-600 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl mb-6  font-bold gradient-text">
             Hemascan AI Diagnostics
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
